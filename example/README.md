@@ -1,4 +1,4 @@
-# test_rx_flux_notifier
+# test_state_x
 
 A new Flutter project.
 
