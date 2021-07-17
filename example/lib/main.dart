@@ -14,6 +14,7 @@ class HomeViewModel extends StateXStore {
   //Dessa maneira é criado um novo atribudo a ter o estado gerenciado pelo StateX
   late final xEmail = StateX.of(this)("");
   late final xPassword = StateX.of(this)("");
+  late final xUserStatus = StateX.of(this)("Faça o login");
 
   final repo = Repository();
 
@@ -23,12 +24,16 @@ class HomeViewModel extends StateXStore {
   set password(String value) => xPassword.value = value;
   String get password => xPassword.value;
 
+  set userStatus(String value) => xUserStatus.value = value;
+  String get userStatus => xUserStatus.value;
+
   bool get isValid => email.isNotEmpty && password.isNotEmpty;
 
   void auth() async {
     //Aqui é informado que a view estará em loading
     setLoading(true);
     if (await repo.authUser(email, password)) {
+      xUserStatus.value = "Usuário logado";
       //Aqui é informado que a view que o loading pode ser revogado
       setLoading(false);
     } else {
@@ -108,8 +113,15 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Text(
-                    'Login do usuário',
+                  //Exemplo usando  scoped builder
+                  StateXScopedBuilder(
+                    //Informo qual a store que gerenciará as mudanças nesse escopo
+                    store: viewModel,
+                    //Parametro opcional. Especifica qual atributos irá escutar as mudanças de estado, caso não passe este atributo o scoped rebuildará a cada mudança da store
+                    states: [viewModel.xUserStatus],
+                    onState: () => Text(
+                      viewModel.userStatus,
+                    ),
                   ),
                   TextField(
                     onChanged: (value) {
@@ -127,6 +139,7 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(
                     height: 20,
                   ),
+
                   //Exemplo usando  scoped builder
                   StateXScopedBuilder(
                     //Informo qual a store que gerenciará as mudanças nesse escopo

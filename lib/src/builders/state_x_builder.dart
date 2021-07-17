@@ -20,7 +20,7 @@ class StateXBuilder extends StatefulWidget {
     required this.store,
     required this.builder,
     this.states,
-    this.includeLoading = false,
+    this.includeLoading = true,
   });
 
   @override
@@ -29,11 +29,10 @@ class StateXBuilder extends StatefulWidget {
 
 class _StateXBuilderState extends State<StateXBuilder> {
   late Widget Function(BuildContext cxt) _currentBuilder;
-  StateXType? _lastStateType;
+  //StateXType? _lastStateType;
+  bool _inLoading = false;
   void _observer(StateXType type, Object? state, int ownerCode) {
-    if (widget.states != null &&
-        (type == StateXType.isState ||
-            (!widget.includeLoading && StateXType.isLoading == type))) {
+    if (widget.states != null && type == StateXType.isState) {
       var contains =
           widget.states!.where((rx) => rx.hashCode == ownerCode).isNotEmpty;
       if (!contains) {
@@ -41,28 +40,38 @@ class _StateXBuilderState extends State<StateXBuilder> {
       }
     }
 
-    setState(() {
-      switch (type) {
-        case StateXType.isLoading:
-          var status = (state as StateXLoading).inLoading;
-          if (status) {
-            _currentBuilder = (ctx) =>
-                widget.builder(context, FluxSnapshot<bool>(type, status));
-          } else if (_lastStateType == StateXType.isLoading) {
-            _currentBuilder = (ctx) =>
-                widget.builder(context, FluxSnapshot(StateXType.isState, null));
-          }
-          break;
-        case StateXType.isError:
-          _currentBuilder = (ctx) => widget.builder(
-              context, FluxSnapshot<Exception?>(type, state as Exception?));
-          break;
-        default:
-          _currentBuilder =
-              (ctx) => widget.builder(context, FluxSnapshot(type, null));
-      }
-    });
-    _lastStateType = type;
+    var _changeState = true;
+    var _builder;
+    switch (type) {
+      case StateXType.isLoading:
+        _changeState = widget.includeLoading;
+        var status = (state as StateXLoading).inLoading;
+        _inLoading = status;
+        if (status) {
+          _builder = (ctx) =>
+              widget.builder(context, FluxSnapshot<bool>(type, status));
+        } else {
+          _builder = (ctx) =>
+              widget.builder(context, FluxSnapshot(StateXType.isState, null));
+        }
+        break;
+      case StateXType.isError:
+        _changeState = true;
+        _builder = (ctx) => widget.builder(
+            context, FluxSnapshot<Exception?>(type, state as Exception?));
+        break;
+      default:
+        if (_inLoading) {
+          _changeState = false;
+        }
+        _builder = (ctx) => widget.builder(context, FluxSnapshot(type, null));
+    }
+
+    if (_changeState) {
+      setState(() {
+        _currentBuilder = _builder;
+      });
+    }
   }
 
   @override

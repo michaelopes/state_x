@@ -26,30 +26,28 @@ class StateXScopedBuilder extends StatefulWidget {
 
 class _State extends State<StateXScopedBuilder> {
   Widget _currentResult = Container();
-  StateXType? _lastStateType;
+  bool _inLoading = false;
+
   void _observer(StateXType type, Object? state, int ownerCode) {
-    if (widget.states != null &&
-        (type == StateXType.isState ||
-            (widget.onLoading == null && StateXType.isLoading == type))) {
+    if (widget.states != null && type == StateXType.isState) {
       var contains =
           widget.states!.where((rx) => rx.hashCode == ownerCode).isNotEmpty;
       if (!contains) {
         return;
       }
     }
+
     if (type == StateXType.isLoading) {
       var status = (state as StateXLoading).inLoading;
-
+      _inLoading = status;
       if (widget.onLoading != null && status) {
         setState(() {
           _currentResult = widget.onLoading!();
         });
-      } else if (!status) {
-        if (_lastStateType == StateXType.isLoading) {
-          setState(() {
-            _currentResult = widget.onState();
-          });
-        }
+      } else {
+        setState(() {
+          _currentResult = widget.onState();
+        });
       }
     } else if (type == StateXType.isError) {
       if (widget.onError != null) {
@@ -62,11 +60,12 @@ class _State extends State<StateXScopedBuilder> {
         });
       }
     } else {
-      setState(() {
-        _currentResult = widget.onState();
-      });
+      if (!_inLoading) {
+        setState(() {
+          _currentResult = widget.onState();
+        });
+      }
     }
-    _lastStateType = type;
   }
 
   @override
