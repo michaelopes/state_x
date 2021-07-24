@@ -1,6 +1,6 @@
 name: state_x
 description: StateX is an alternative to state management in flutter.
-version: 1.0.1
+version: 1.0.2
 homepage: https://github.com/michaelopes/state_x
 
 environment:

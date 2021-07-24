@@ -12,7 +12,7 @@ class Repository {
 //Dessa forma eu é criado um novo view model onde será centralizado do gerenciamento de estado da home
 class HomeViewModel extends StateXStore {
   //Dessa maneira é criado um novo atribudo a ter o estado gerenciado pelo StateX
-  late final xEmail = StateX.of(this)("");
+  late final Stated<String> xEmail = StateX.of(this)("");
   late final xPassword = StateX.of(this)("");
   late final xUserStatus = StateX.of(this)("Faça o login");
 
@@ -71,7 +71,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     //Aqui é adicionado um novo observer util para gerenciamento de erros, contudo qualquer estado que seja mudado dentro da store passará por aqui
-    viewModel.addObserver((type, state, _) => print(type));
+    viewModel
+        .addObserver((type, state, key) => print(key == viewModel.xEmail.key));
     super.initState();
   }
 

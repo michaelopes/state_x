@@ -1,6 +1,12 @@
 import 'package:state_x/src/stores/state_x_store.dart';
 
-class _StateX<State extends Object?> {
+abstract class Stated<State extends Object?> {
+  set value(State value);
+  State get value;
+  int get key;
+}
+
+class _StateX<State extends Object?> extends Stated<State> {
   late State _stateXState;
   late void Function(Object? value, int key) observer;
 
@@ -8,7 +14,7 @@ class _StateX<State extends Object?> {
     _stateXState = state;
   }
 
-  void set value(State value) {
+  set value(State value) {
     _stateXState = value;
     this.observer(value, this.hashCode);
   }
@@ -16,6 +22,9 @@ class _StateX<State extends Object?> {
   State get value => _stateXState;
 
   int get ownerCode => this.hashCode;
+
+  @override
+  int get key => ownerCode;
 }
 
 typedef NewStateX = _StateX<T> Function<T>(T state);
